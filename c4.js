@@ -269,7 +269,7 @@ class ComputerPlayer extends Player {
 
 // Testing game
 // /*
-const red = new ComputerPlayer()
+const red = new HumanPlayer()
 const yellow = new ComputerPlayer()
 const game = new Game(red, yellow)
 game.playGame()
