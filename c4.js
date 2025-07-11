@@ -1,4 +1,7 @@
+// Required import for user input
 const readline = require('readline')
+
+// Game class
 class Game {
     constructor(p1 = new ComputerPlayer(), p2= new ComputerPlayer(), rows=6, cols=7, win_req=4) {
         // Assigning players and colours
@@ -11,7 +14,7 @@ class Game {
         this.roundCount = 0;
         this.roundLimit = 1000;
 
-        // Creating 6 (rows) x 7 (columns) grid and set to keep track of full squares
+        // Creating grid and column capacity and free_squares
         this.rows = rows
         this.cols = cols
         this.grid = []
@@ -22,30 +25,32 @@ class Game {
             }
             this.grid.push(r)
         }
-
         this.col_capacity = [];
         for (let i = 0; i < this.cols; i++) {
             this.col_capacity.push(this.rows)
         }
         this.free_squares = this.grid.length * this.grid[0].length;
 
+        // Setting up input interface
         this.rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
         });
 
-        // 0 for ongoing, 1 for p1 win, 2 for p2 win, 3 for draw (no more squares)
-        this.state = 0 
+        // initialising game state: 0 for ongoing, 1 for p1 win, 2 for p2 win, 3 for draw (no more squares)
+        this.state = 0
+        
+        // Printing blank grid to console
         this.printGrid()
     }
 
     async playGame() {
+        // Give player 1 first turn
         let turn = 0
         while (!this.isWinner() && (this.free_squares > 0) && this.roundCount < this.roundLimit) {
+            // Increment round count and output information to console
             this.roundCount++;
-
             console.log(`\nRound: ${this.roundCount}, ${this.players[turn].name}'s turn: `);
-            ;
 
             // Player move
             await this.playerTurn(this.players[turn])
@@ -60,6 +65,7 @@ class Game {
     }
 
     async playerTurn(player) {
+        // Based on player type call the humanTurn or computerTurn method
         if (player.type == 0) {
             await this.humanTurn(player)
         } else {
@@ -68,17 +74,20 @@ class Game {
     }
 
     async humanTurn(player) {
-        // Get user input until he picks a valid square, likely to have callbacks
+        // Keep trying user input until user inputs a valid column, short circuit skips first valid column check
         let col;
         let sc = true;
         while (sc || !this.isValidColumn(parseInt(col))) {
             sc = false;
             col = await this.getUserColumn()
         }
+
+        // Place counter in the validated inputted column
         this.placeCounter(player, col);
     }
 
     async getUserColumn() {
+        // Promise logic to get user input
         return new Promise((resolve) => {
             this.rl.question(
                 `Enter a column from ${0} to ${this.cols}: `,
@@ -89,22 +98,27 @@ class Game {
     }
 
     isValidColumn(col) {
+        // Fist check if parseInt failed
         if (col === NaN) {
             console.log("Error: Not a number.");
             return false
+        // Then if the number is in the required range
         } else if (col < 0 || col >= this.cols) {
             console.log(`Error: Not a valid column, enter a number from ${0} to ${this.cols-1}`);
             return false;
+        // Then if there are still spaces in that column
         } else  if (!this.col_capacity[col]) {
             console.log(`Error: This column is already full, choose another.`);
             return false;
+        // If passes all above, good to place a counter
         } else {return true;}
     }
 
     async computerTurn(player) {
-        // JS doesnt have tuples so stringigy
         // Simulate thinking time
         await this.sleep(1000)
+
+        // Choose random column until one has enough space
         while (true) {
             let col = Math.floor(this.cols * Math.random());
             if (this.col_capacity[col]) {
@@ -116,17 +130,19 @@ class Game {
     }
 
     placeCounter(player, col) {
+        // Update grid, column capacity, and number of free squares
         this.grid[this.col_capacity[col]-1][col] = player.colour   
         this.col_capacity[col] -= 1
         this.free_squares -= 1;
+
+        // Check for draw
         if (this.free_squares == 0) {
             this.state = 3;
         }
     }
-    // Warwick Wellbeing team:  02476 575570
 
     finaliseGame() {
-        console.log(`Spaces left: ${this.free_squares}`);
+        // Print closing message
         let end_str = "Game Finished: "
         if (this.state == 0) {
             throw "Game ended prematurely";
@@ -138,13 +154,18 @@ class Game {
             end_str += "Draw!!!"
         }
         console.log(end_str);
+
+        // Close user input interface
         this.rl.close()
     }
 
     printGrid() {
+        // Create top row structure
         let str_grid = ""
         let edge = "-".repeat(4*this.cols+1)+"\n"
         str_grid += edge
+
+        // Create each row then an edge
         for (let i = 0; i < this.rows; i++) {
             let str_row = "| "
             for (let j = 0; j < this.cols; j++) {
@@ -155,18 +176,20 @@ class Game {
             str_grid += "\n"
             str_grid += edge 
         }
+
+        // Print Final grid
         console.log(str_grid);; // Nice formatted printing of grid
     }
 
     isWinner() {
+        // Check for 4 horizontally, vertically, or diagonally
         return (this.rowWinner() || this.colWinner() || this.diagWinner())
     }
 
     rowWinner() { 
-        // Check each row, check each diagonal, check each column
-        //  return true and update state to winner if connected 4 is found
-        // Two pointers approach to rows, loop for each row
+        // Loop through each row
         for (let i = 0; i < this.rows; i++) {
+            // Two pointers approach for each row
             let l = 0;
             let colour;
             while (l < this.cols) {
@@ -206,8 +229,9 @@ class Game {
     }
 
     colWinner() {
+        // Loop through columns
         for (let i = 0; i < this.cols; i++) {
-            //console.log(`Column ${i}`);
+            // Two pointer approach on each column
             let l = 0;
             let colour;
             while (l < this.rows) {
@@ -218,7 +242,6 @@ class Game {
                 }
 
                 // Otherwise proceed while direction is same, using the second pointer
-                //console.log(`Col: ${i}, checking for strip.`);
                 colour = this.grid[l][i]
                 let strip_len = 1
                 let r = l + 1
@@ -243,18 +266,22 @@ class Game {
                 l = r
             }
         }
+        // Default behaviour, no 4 vertically found
         return false;
     }
 
     diagWinner() {
+        // TODO
         return false;
     }
 
     async sleep(ms) {
+        // To simulate computer "thinking"
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 }
 
+// General Player Class
 class Player {
     constructor(name) {
         this.type = 0;
@@ -267,12 +294,14 @@ class Player {
     }
 }
 
+// Human Player Class
 class HumanPlayer extends Player {
     constructor(name) {
         super(name)
     }
 }
 
+// Computer Player Class
 class ComputerPlayer extends Player {
     static instances = 0;
     constructor() {
