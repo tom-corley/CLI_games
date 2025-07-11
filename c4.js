@@ -63,20 +63,29 @@ class Game {
         if (player.type == 0) {
             await this.humanTurn(player)
         } else {
-            this.computerTurn(player); 
+            await this.computerTurn(player); 
         }
     }
 
     async humanTurn(player) {
         // Get user input until he picks a valid square, likely to have callbacks
-        let user_input;
-        while (!isValidColumn(parseInt(user_input))) {
-            user_input = await this.rl.question(
-                `Enter a column from ${0} to ${this.cols}`,
-                answer => resolve(answer)
-            )
+        let col;
+        let sc = true;
+        while (sc || !this.isValidColumn(parseInt(col))) {
+            sc = false;
+            col = await this.getUserColumn()
         }
-        this.placeCounter(player, user_input);
+        this.placeCounter(player, col);
+    }
+
+    async getUserColumn() {
+        return new Promise((resolve) => {
+            this.rl.question(
+                `Enter a column from ${0} to ${this.cols}: `,
+                (answer) => {resolve(answer)
+            
+            })
+        })
     }
 
     isValidColumn(col) {
@@ -84,7 +93,7 @@ class Game {
             console.log("Error: Not a number.");
             return false
         } else if (col < 0 || col >= this.cols) {
-            console.log(`Error: Not a valid column, enter a number from ${0} to ${this.cols-1}.`);
+            console.log(`Error: Not a valid column, enter a number from ${0} to ${this.cols-1}`);
             return false;
         } else  if (!this.col_capacity[col]) {
             console.log(`Error: This column is already full, choose another.`);
@@ -92,8 +101,10 @@ class Game {
         } else {return true;}
     }
 
-    computerTurn(player) {
+    async computerTurn(player) {
         // JS doesnt have tuples so stringigy
+        // Simulate thinking time
+        await this.sleep(1000)
         while (true) {
             let col = Math.floor(this.cols * Math.random());
             if (this.col_capacity[col]) {
@@ -238,6 +249,10 @@ class Game {
     diagWinner() {
         return false;
     }
+
+    async sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 }
 
 class Player {
@@ -269,7 +284,7 @@ class ComputerPlayer extends Player {
 
 // Testing game
 // /*
-const red = new HumanPlayer()
+const red = new HumanPlayer("Tom")
 const yellow = new ComputerPlayer()
 const game = new Game(red, yellow)
 game.playGame()

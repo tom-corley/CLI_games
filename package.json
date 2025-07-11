@@ -1,0 +1,23 @@
+{
+  "name": "cli_games",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/tom-corley/CLI_games#readme",
+  "bugs": {
+    "url": "https://github.com/tom-corley/CLI_games/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tom-corley/CLI_games.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "c4.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "readline": "^1.3.0"
+  }
+}
