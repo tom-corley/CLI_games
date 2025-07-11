@@ -1,5 +1,6 @@
+const readline = require('readline')
 class Game {
-    constructor(p1, p2, rows=6, cols=7, win_req=4) {
+    constructor(p1 = new ComputerPlayer(), p2= new ComputerPlayer(), rows=6, cols=7, win_req=4) {
         // Assigning players and colours
         this.p1 = p1
         this.p1.setColour("R")
@@ -7,6 +8,8 @@ class Game {
         this.p2.setColour("Y")
         this.players = [p1, p2]
         this.win_req = win_req
+        this.roundCount = 0;
+        this.roundLimit = 1000;
 
         // Creating 6 (rows) x 7 (columns) grid and set to keep track of full squares
         this.rows = rows
@@ -26,39 +29,67 @@ class Game {
         }
         this.free_squares = this.grid.length * this.grid[0].length;
 
+        this.rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+
         // 0 for ongoing, 1 for p1 win, 2 for p2 win, 3 for draw (no more squares)
         this.state = 0 
         this.printGrid()
-        this.playGame()
     }
 
-    playGame() {
+    async playGame() {
         let turn = 0
-        while (!this.isWinner() && (this.free_squares > 0)) {
-            console.log(`\n${this.players[turn].name}'s turn: `);
+        while (!this.isWinner() && (this.free_squares > 0) && this.roundCount < this.roundLimit) {
+            this.roundCount++;
+
+            console.log(`\nRound: ${this.roundCount}, ${this.players[turn].name}'s turn: `);
             ;
 
             // Player move
-            this.playerTurn(this.players[turn])
+            await this.playerTurn(this.players[turn])
             this.printGrid()
 
             // Swap whose turn it is
             turn = 1 - turn;
+            //console.log(`Turn set to ${turn}`);
         }
 
         this.finaliseGame()
     }
 
-    playerTurn(player) {
+    async playerTurn(player) {
         if (player.type == 0) {
-            this.humanTurn(player)
+            await this.humanTurn(player)
         } else {
             this.computerTurn(player); 
         }
     }
 
-    humanTurn(player) {
-        ; // Get user input until he picks a valid square, likely to have callbacks
+    async humanTurn(player) {
+        // Get user input until he picks a valid square, likely to have callbacks
+        let user_input;
+        while (!isValidColumn(parseInt(user_input))) {
+            user_input = await this.rl.question(
+                `Enter a column from ${0} to ${this.cols}`,
+                answer => resolve(answer)
+            )
+        }
+        this.placeCounter(player, user_input);
+    }
+
+    isValidColumn(col) {
+        if (col === NaN) {
+            console.log("Error: Not a number.");
+            return false
+        } else if (col < 0 || col >= this.cols) {
+            console.log(`Error: Not a valid column, enter a number from ${0} to ${this.cols-1}.`);
+            return false;
+        } else  if (!this.col_capacity[col]) {
+            console.log(`Error: This column is already full, choose another.`);
+            return false;
+        } else {return true;}
     }
 
     computerTurn(player) {
@@ -84,7 +115,6 @@ class Game {
     // Warwick Wellbeing team:  02476 575570
 
     finaliseGame() {
-        this.printGrid()
         console.log(`Spaces left: ${this.free_squares}`);
         let end_str = "Game Finished: "
         if (this.state == 0) {
@@ -97,6 +127,7 @@ class Game {
             end_str += "Draw!!!"
         }
         console.log(end_str);
+        this.rl.close()
     }
 
     printGrid() {
@@ -115,8 +146,6 @@ class Game {
         }
         console.log(str_grid);; // Nice formatted printing of grid
     }
-
-    char
 
     isWinner() {
         return (this.rowWinner() || this.colWinner() || this.diagWinner())
@@ -142,7 +171,7 @@ class Game {
                 let r = l + 1
                 while (r < this.grid[0].length && this.grid[i][r] === colour) {
                     strip_len += 1
-                    console.log(strip_len);
+                    //console.log(strip_len);
                     r += 1
                 }
 
@@ -243,5 +272,5 @@ class ComputerPlayer extends Player {
 const red = new ComputerPlayer()
 const yellow = new ComputerPlayer()
 const game = new Game(red, yellow)
-//game.playGame()
+game.playGame()
 // */
