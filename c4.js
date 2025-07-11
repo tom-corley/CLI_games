@@ -3,6 +3,7 @@ class Game {
         // Assigning players
         this.p1 = p1
         this.p2 = p2
+        this.players = [p1, p2]
 
         // Creating 6 (rows) x 7 (columns) grid and set to keep track of full squares
         this.grid = []
@@ -11,6 +12,9 @@ class Game {
         }
         this.free_squares = 42;
         this.full = new Set()
+
+        // 0 for ongoing, 1 for p1 win, 2 for p2 win, 3 for draw (no more squares)
+        this.state = 0 
     }
 
     playGame() {
@@ -19,8 +23,9 @@ class Game {
             // Some output to user
             ;
 
-            // Actual move
-            this.playerTurn(turn)
+            // Player move
+            this.playerTurn(this.players[turn])
+            this.printGrid()
 
             // Swap whose turn it is
             turn = 1 - turn;
@@ -40,12 +45,28 @@ class Game {
     }
 
     computerTurn(player) {
-        ; // Generate random square until you get one that is empty
+        ; // Generate random square until you get one that is empty (not in this.full), using set
     }
 
     finaliseGame() {
-        ; // Output to user etc
+        let end_str = "Game Finished: "
+        if (this.state == 0) {
+            throw "Game ended prematurely";
+        } else if (this.state == 1) {
+            end_str += "Player 1 wins!!!"
+        } else if (this.state == 2) {
+            end_str += "Player 2 wins!!!"
+        } else {
+            end_str += "Draw!!!"
+        }
+        console.log(end_str);
     }
+
+    printGrid() {
+        ; // Nice formatted printing of grid
+    }
+
+
 }
 
 class Player {
@@ -68,4 +89,10 @@ class ComputerPlayer extends Player {
     }
 }
 
-//const g = new Game()
+// Testing game
+/*
+const red = new HumanPlayer("Red")
+const yellow = new HumanPlayer("Yellow")
+const game = new Game(red, yellow)
+game.playGame()
+*/
