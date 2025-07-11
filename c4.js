@@ -19,7 +19,7 @@ class Game {
 
     playGame() {
         let turn = 0
-        while (!this.winner() && (this.free_squares > 0)) {
+        while (!this.isWinner() && (this.free_squares > 0)) {
             // Some output to user
             ;
 
@@ -64,6 +64,11 @@ class Game {
 
     printGrid() {
         ; // Nice formatted printing of grid
+    }
+
+    isWinner() { 
+        // Check each row, check each diagonal, check each column
+        //  return true and update state to winner if connected 4 is found
     }
 
 
